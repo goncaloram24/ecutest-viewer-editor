@@ -212,7 +212,9 @@ export class Workspace {
     linked.add(node);
     const kids: XNode[] = [];
     // Skip wrappers, and children that only hold the owner's own name/value (ACTION, TIME, DEFAULT-VALUE, ...).
-    const holdsOwn = (owner: XNode, c: XNode) => [owner.nameRef, owner.valueRef].some((r) => r && r.span.start >= c.start && r.span.end <= c.end);
+    const inside = (r: { span: { start: number; end: number } } | undefined, c: XNode) => !!r && r.span.start >= c.start && r.span.end <= c.end;
+    const simple = (c: XNode): boolean => c.tag === 'DEFAULT-VALUE' || (c.fields.length + c.children.length === 1 && c.children.every(simple));
+    const holdsOwn = (owner: XNode, c: XNode) => inside(owner.nameRef, c) || (inside(owner.valueRef, c) && simple(c));
     const contents = (owner: XNode) => {
       for (const c of owner.children) {
         if (c.kind === 'section') kids.push(...c.children);

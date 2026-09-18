@@ -308,10 +308,12 @@ export function addPackage(ws: Workspace, targetPath: string, file: string, name
   const rel = toPosix(file).replace(/^\.?\/+/, '');
   if (!/\.pkg$/i.test(rel) || rel.split('/').includes('..') || path.isAbsolute(file)) throw new Error(`"${file}" must be a .pkg path relative to the project folder, without ".."`);
   const abs = path.join(path.dirname(model.file), rel);
-  // ECU-TEST resolves references against the workspace "Packages" folder when the package lives below one.
+  // ECU-TEST resolves references against the workspace "Packages" folder: use it when the project lives in that workspace.
   const parts = toPosix(abs).split('/');
   const pk = parts.map((s) => s.toLowerCase()).lastIndexOf('packages');
-  const raw = (pk >= 0 && pk < parts.length - 1 ? parts.slice(pk + 1) : rel.split('/')).join('\\');
+  const workspaceDir = pk > 0 ? parts.slice(0, pk).join('/') : undefined;
+  const inWorkspace = workspaceDir !== undefined && (toPosix(path.dirname(model.file)) + '/').startsWith(workspaceDir + '/');
+  const raw = (inWorkspace ? parts.slice(pk + 1) : rel.split('/')).join('\\');
   if (ws.packagesOf(model).some((p) => p.ref?.resolved === abs)) throw new Error(`${rel} is already referenced by ${model.name}`);
   const withId = !!field(idx.root!, 'ID');
   const example = ws.packagesOf(model).find((p) => p.kind === 'packageRef');

@@ -130,7 +130,8 @@ export function nameRefs(node: XNode): ValueRef[] {
     const shown = node.nameRef?.value;
     return actionTexts(node).filter((f) => f.value === shown).map(fieldRef);
   }
-  return node.nameRef ? [node.nameRef] : [];
+  // A project is addressed by its file name; its NAME field is only a display name (edit it as /@NAME).
+  return node.nameRef && node.kind !== 'project' ? [node.nameRef] : [];
 }
 
 function classifyStep(n: XNode): void {

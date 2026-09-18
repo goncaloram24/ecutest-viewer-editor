@@ -1,0 +1,11 @@
+body { padding: 4px 12px 16px; color: var(--vscode-foreground); font-family: var(--vscode-font-family); font-size: var(--vscode-font-size); line-height: 1.45; }
+h2 { font-size: 1.15em; margin: 8px 0 2px; }
+h3 { font-size: 0.85em; margin: 14px 0 4px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.75; }
+.path { margin: 0 0 8px; font-size: 0.9em; opacity: 0.8; word-break: break-all; }
+a { color: var(--vscode-textLink-foreground); text-decoration: none; }
+a:hover { text-decoration: underline; }
+ul { margin: 4px 0; padding-left: 18px; }
+li { margin: 2px 0; word-break: break-word; }
+pre { overflow-x: auto; padding: 8px; font-family: var(--vscode-editor-font-family); font-size: 0.9em; background: var(--vscode-textCodeBlock-background); }
+.diff { color: var(--vscode-gitDecoration-modifiedResourceForeground); }
+.hint { opacity: 0.6; }

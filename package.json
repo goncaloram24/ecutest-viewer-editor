@@ -40,5 +40,293 @@
     "esbuild": "^0.24.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
+  },
+  "activationEvents": [
+    "workspaceContains:**/*.prj"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ecutest",
+          "title": "ECU-TEST",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ecutest": [
+        {
+          "id": "ecutest.tests",
+          "name": "Tests"
+        },
+        {
+          "id": "ecutest.description",
+          "name": "Description",
+          "type": "webview"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "ecutest.tests",
+        "contents": "No ECU-TEST project (.prj) found in this workspace.\n[New Project](command:ecutest.newProject)\n[Refresh](command:ecutest.refresh)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "ecutest.refresh",
+        "title": "Refresh",
+        "category": "ECU-TEST",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "ecutest.showOutput",
+        "title": "Show Output",
+        "category": "ECU-TEST",
+        "icon": "$(output)"
+      },
+      {
+        "command": "ecutest.search",
+        "title": "Search\u2026",
+        "category": "ECU-TEST",
+        "icon": "$(search)"
+      },
+      {
+        "command": "ecutest.open",
+        "title": "Open in Visual Editor",
+        "category": "ECU-TEST",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "ecutest.reveal",
+        "title": "Reveal in Tests Tree",
+        "category": "ECU-TEST"
+      },
+      {
+        "command": "ecutest.revealInSource",
+        "title": "Open Source (file:line)",
+        "category": "ECU-TEST",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "ecutest.copyJson",
+        "title": "Copy as JSON",
+        "category": "ECU-TEST"
+      },
+      {
+        "command": "ecutest.setValue",
+        "title": "Set Value\u2026",
+        "category": "ECU-TEST"
+      },
+      {
+        "command": "ecutest.addStep",
+        "title": "Add Step\u2026",
+        "category": "ECU-TEST",
+        "icon": "$(add)"
+      },
+      {
+        "command": "ecutest.addParam",
+        "title": "Add Parameter\u2026",
+        "category": "ECU-TEST"
+      },
+      {
+        "command": "ecutest.addPackage",
+        "title": "Add Package\u2026",
+        "category": "ECU-TEST"
+      },
+      {
+        "command": "ecutest.rename",
+        "title": "Rename\u2026",
+        "category": "ECU-TEST"
+      },
+      {
+        "command": "ecutest.delete",
+        "title": "Delete",
+        "category": "ECU-TEST"
+      },
+      {
+        "command": "ecutest.move",
+        "title": "Move After\u2026",
+        "category": "ECU-TEST"
+      },
+      {
+        "command": "ecutest.newProject",
+        "title": "New Project\u2026",
+        "category": "ECU-TEST",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "ecutest.describe",
+        "title": "Describe",
+        "category": "ECU-TEST"
+      },
+      {
+        "command": "ecutest.toggleGeneratedView",
+        "title": "Toggle Generated (test.h) View",
+        "category": "ECU-TEST",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "ecutest.setupMcp",
+        "title": "Set Up MCP Server for Agents (.mcp.json)",
+        "category": "ECU-TEST"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "ecutest.search",
+          "when": "view == ecutest.tests",
+          "group": "navigation@0"
+        },
+        {
+          "command": "ecutest.refresh",
+          "when": "view == ecutest.tests",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ecutest.toggleGeneratedView",
+          "when": "view == ecutest.tests",
+          "group": "navigation@2"
+        },
+        {
+          "command": "ecutest.newProject",
+          "when": "view == ecutest.tests",
+          "group": "navigation@3"
+        },
+        {
+          "command": "ecutest.showOutput",
+          "when": "view == ecutest.tests",
+          "group": "navigation@4"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "ecutest.open",
+          "when": "view == ecutest.tests",
+          "group": "inline"
+        },
+        {
+          "command": "ecutest.open",
+          "when": "view == ecutest.tests",
+          "group": "1_nav@1"
+        },
+        {
+          "command": "ecutest.revealInSource",
+          "when": "view == ecutest.tests",
+          "group": "1_nav@2"
+        },
+        {
+          "command": "ecutest.describe",
+          "when": "view == ecutest.tests",
+          "group": "1_nav@3"
+        },
+        {
+          "command": "ecutest.copyJson",
+          "when": "view == ecutest.tests",
+          "group": "1_nav@4"
+        },
+        {
+          "command": "ecutest.setValue",
+          "when": "view == ecutest.tests && viewItem =~ /value/",
+          "group": "2_edit@1"
+        },
+        {
+          "command": "ecutest.rename",
+          "when": "view == ecutest.tests && viewItem =~ /named/",
+          "group": "2_edit@2"
+        },
+        {
+          "command": "ecutest.addStep",
+          "when": "view == ecutest.tests && viewItem =~ /steps/",
+          "group": "2_edit@3"
+        },
+        {
+          "command": "ecutest.addParam",
+          "when": "view == ecutest.tests && viewItem =~ /package/",
+          "group": "2_edit@4"
+        },
+        {
+          "command": "ecutest.addPackage",
+          "when": "view == ecutest.tests && viewItem =~ /packages/",
+          "group": "2_edit@5"
+        },
+        {
+          "command": "ecutest.move",
+          "when": "view == ecutest.tests && viewItem =~ /removable/",
+          "group": "3_struct@1"
+        },
+        {
+          "command": "ecutest.delete",
+          "when": "view == ecutest.tests && viewItem =~ /removable/",
+          "group": "3_struct@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ECU-TEST",
+      "properties": {
+        "ecutest.projectGlob": {
+          "type": "string",
+          "default": "**/*.prj",
+          "description": "Glob (relative to the workspace folder) used to find project files."
+        },
+        "ecutest.project": {
+          "type": "string",
+          "default": "",
+          "description": "Restrict loading to one project: its name (without .prj) or path relative to the workspace folder."
+        },
+        "ecutest.generatedDir": {
+          "type": "string",
+          "default": "gen",
+          "description": "Folder with the generated test.h files, relative to the workspace folder. Used by diff and the generated view."
+        },
+        "ecutest.showGenerated": {
+          "type": "boolean",
+          "default": false,
+          "description": "Mark elements whose generated test.h function is missing or outdated, and show the generated code in the Description view."
+        },
+        "ecutest.packageBaseDirs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Additional folders searched when resolving package references (after the project folder, the workspace folder and Packages folders)."
+        },
+        "ecutest.ignoreGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/.git/**",
+            "**/build/**",
+            "**/out/**",
+            "**/dist/**",
+            "**/gen/**",
+            "**/TestReports/**"
+          ],
+          "description": "Globs ignored during project discovery."
+        },
+        "ecutest.openInEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "Clicking a tree element opens it in the visual editor. When off, clicking jumps to the XML source instead."
+        },
+        "ecutest.focusOnStartup": {
+          "type": "boolean",
+          "default": false,
+          "description": "Focus the ECU-TEST view when a workspace with projects is opened."
+        },
+        "ecutest.startupPath": {
+          "type": "string",
+          "default": "",
+          "description": "Element path opened in the visual editor on startup, e.g. /MyProject/Folder/Package."
+        }
+      }
+    }
   }
 }

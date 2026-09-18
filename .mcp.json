@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ecutest": {
+      "command": "node",
+      "args": ["dist/mcp.js", "--root", "fixtures/example", "--generated-dir", "gen"]
+    }
+  }
+}

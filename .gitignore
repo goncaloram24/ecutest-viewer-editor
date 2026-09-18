@@ -1,0 +1,9 @@
+node_modules/
+dist/
+release/
+tools/
+*.vsix
+.tmp-*/
+# Real-world samples without a redistributable license: fetch with `npm run fetch-samples`
+samples/*/
+!samples/tracetronic_ecu.test-code/

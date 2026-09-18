@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PROJECT format-rev="10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<NAME xsi:type="string">Body control</NAME>
+	<ENABLED xsi:type="boolean">True</ENABLED>
+	<REPORTING xsi:type="boolean">True</REPORTING>
+	<ID xsi:type="string">00000000000000000000000000000065</ID>
+	<COMPONENTS>
+		<COMPONENT format-rev="10" xsi:type="subproject">
+			<NAME xsi:type="string">Lights</NAME>
+			<ENABLED xsi:type="boolean">True</ENABLED>
+			<REPORTING xsi:type="boolean">True</REPORTING>
+			<ID xsi:type="string">00000000000000000000000000000070</ID>
+			<COMPONENTS>
+				<COMPONENT format-rev="5" xsi:type="packageTest">
+					<NAME xsi:type="string">Low beam</NAME>
+					<ENABLED xsi:type="boolean">True</ENABLED>
+					<REPORTING xsi:type="boolean">True</REPORTING>
+					<ID xsi:type="string">00000000000000000000000000000066</ID>
+					<COMPONENTS/>
+					<PACKAGE-REF format-rev="1" style="relative" xsi:type="packageRef">
+						<PACKAGE-PATH xsi:type="string">Lights\LowBeam.pkg</PACKAGE-PATH>
+					</PACKAGE-REF>
+				</COMPONENT>
+				<COMPONENT format-rev="5" xsi:type="packageTest">
+					<NAME xsi:type="string">High beam</NAME>
+					<ENABLED xsi:type="boolean">True</ENABLED>
+					<REPORTING xsi:type="boolean">True</REPORTING>
+					<ID xsi:type="string">00000000000000000000000000000067</ID>
+					<COMPONENTS/>
+					<PACKAGE-REF format-rev="1" style="relative" xsi:type="packageRef">
+						<PACKAGE-PATH xsi:type="string">Lights\HighBeam.pkg</PACKAGE-PATH>
+					</PACKAGE-REF>
+				</COMPONENT>
+				<COMPONENT format-rev="5" xsi:type="packageTest">
+					<NAME xsi:type="string">Indicators</NAME>
+					<ENABLED xsi:type="boolean">True</ENABLED>
+					<REPORTING xsi:type="boolean">True</REPORTING>
+					<ID xsi:type="string">00000000000000000000000000000068</ID>
+					<COMPONENTS/>
+					<PACKAGE-REF format-rev="1" style="relative" xsi:type="packageRef">
+						<PACKAGE-PATH xsi:type="string">Lights\Indicators.pkg</PACKAGE-PATH>
+					</PACKAGE-REF>
+				</COMPONENT>
+				<COMPONENT format-rev="5" xsi:type="packageTest">
+					<NAME xsi:type="string">Fog light</NAME>
+					<ENABLED xsi:type="boolean">True</ENABLED>
+					<REPORTING xsi:type="boolean">True</REPORTING>
+					<ID xsi:type="string">00000000000000000000000000000069</ID>
+					<COMPONENTS/>
+					<PACKAGE-REF format-rev="1" style="relative" xsi:type="packageRef">
+						<PACKAGE-PATH xsi:type="string">Lights\FogLight.pkg</PACKAGE-PATH>
+					</PACKAGE-REF>
+				</COMPONENT>
+			</COMPONENTS>
+		</COMPONENT>
+		<COMPONENT format-rev="10" xsi:type="subproject">
+			<NAME xsi:type="string">Wipers</NAME>
+			<ENABLED xsi:type="boolean">True</ENABLED>
+			<REPORTING xsi:type="boolean">True</REPORTING>
+			<ID xsi:type="string">00000000000000000000000000000073</ID>
+			<COMPONENTS>
+				<COMPONENT format-rev="5" xsi:type="packageTest">
+					<NAME xsi:type="string">Wiper speed</NAME>
+					<ENABLED xsi:type="boolean">True</ENABLED>
+					<REPORTING xsi:type="boolean">True</REPORTING>
+					<ID xsi:type="string">00000000000000000000000000000071</ID>
+					<COMPONENTS/>
+					<PACKAGE-REF format-rev="1" style="relative" xsi:type="packageRef">
+						<PACKAGE-PATH xsi:type="string">Wipers\WiperSpeed.pkg</PACKAGE-PATH>
+					</PACKAGE-REF>
+				</COMPONENT>
+				<COMPONENT format-rev="5" xsi:type="packageTest">
+					<NAME xsi:type="string">Rain sensor</NAME>
+					<ENABLED xsi:type="boolean">False</ENABLED>
+					<REPORTING xsi:type="boolean">True</REPORTING>
+					<ID xsi:type="string">00000000000000000000000000000072</ID>
+					<COMPONENTS/>
+					<PACKAGE-REF format-rev="1" style="relative" xsi:type="packageRef">
+						<PACKAGE-PATH xsi:type="string">Wipers\RainSensor.pkg</PACKAGE-PATH>
+					</PACKAGE-REF>
+				</COMPONENT>
+			</COMPONENTS>
+		</COMPONENT>
+		<COMPONENT format-rev="5" xsi:type="packageTest">
+			<NAME xsi:type="string">Read DTC</NAME>
+			<ENABLED xsi:type="boolean">True</ENABLED>
+			<REPORTING xsi:type="boolean">True</REPORTING>
+			<ID xsi:type="string">00000000000000000000000000000074</ID>
+			<COMPONENTS/>
+			<PACKAGE-REF format-rev="1" style="relative" xsi:type="packageRef">
+				<PACKAGE-PATH xsi:type="string">Diagnostics\ReadDtc.pkg</PACKAGE-PATH>
+			</PACKAGE-REF>
+		</COMPONENT>
+	</COMPONENTS>
+</PROJECT>

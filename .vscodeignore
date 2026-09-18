@@ -1,0 +1,11 @@
+**
+!dist/extension.js
+!dist/mcp.js
+!dist/cli.js
+!dist/core.js
+!media/**
+!scripts/generate.mjs
+!package.json
+!INSTALL.md
+!README.md
+!LICENSE

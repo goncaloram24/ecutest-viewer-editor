@@ -189,6 +189,7 @@ export class Workspace {
         const pkgRoot = model.called[i];
         if (linked.has(pkgRoot)) continue;
         pkgRoot.navParent = root;
+        pkgRoot.name = path.basename(pkgRoot.file).replace(/\.pkg$/i, '');
         root.navChildren.push(pkgRoot);
         this.assign(pkgRoot, root.path + '/' + packageSegment(toPosix(path.relative(path.dirname(model.file), pkgRoot.file))));
         this.link(model, pkgRoot, root, linked);

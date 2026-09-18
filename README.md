@@ -127,6 +127,9 @@ Root = `--root` or the workspace folder. Projects are found with the glob. Every
 references a package (`PACKAGE-REF/PACKAGE-PATH`, Windows separators); references are resolved against, in order:
 the project's folder, the root, `packageBaseDirs`, and every `Packages` folder at or above the project folder,
 even above the opened root (ECU-TEST's workspace convention; this makes opening a sub folder of the workspace work).
+If a reference still does not exist as written (other base folder, different upper/lower case, a path from
+another machine), the file is looked up by its longest trailing path among all `.pkg` files below the root and the
+enclosing `Packages` folder; ties go to the file closest to the project.
 A package referenced several times by one project is indexed once per reference (`/P/Mod/UT`, `/P/Mod/UT#2`), so
 every reference shows the full contents; edits go to the one shared file. Absolute paths from another machine are matched by their longest existing
 suffix. Packages called by `tsPackage` steps with a literal path are loaded as well. Missing packages become

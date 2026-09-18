@@ -8,7 +8,7 @@ import { generateModel } from '../src/core/generate';
 import { nodeView, treeLines } from '../src/core/json';
 import { walk, XNode } from '../src/core/model';
 import { decodeXml, encodeAttr, encodeText, parseText } from '../src/core/parser';
-import { findProjects, globToRegExp, resolvePackage } from '../src/core/project';
+import { findProjects, globToRegExp, PackageLocator, resolvePackage } from '../src/core/project';
 import { allowedStepTypes, schemaFor, validateValue } from '../src/core/schema';
 import { setValue } from '../src/core/ops';
 import { Workspace } from '../src/core/workspace';
@@ -104,6 +104,26 @@ suite('project discovery', () => {
     expect(resolvePackage('C:\\Work\\WS\\Packages\\Lights\\LowBeam.pkg', prj, { root: EXAMPLE })).toBe(expected);
     expect(resolvePackage('LowBeam.pkg', prj, { root: EXAMPLE })).toBeUndefined();
     expect(resolvePackage('LowBeam.pkg', prj, { root: EXAMPLE, packageBaseDirs: ['Lights'] })).toBe(expected);
+  });
+
+  it('falls back to the trailing path among all packages: other base folder, other case, foreign prefix', async () => {
+    await withCopy(EXAMPLE, (dir) => {
+      fs.mkdirSync(path.join(dir, 'TestCases', 'ModA'), { recursive: true });
+      fs.mkdirSync(path.join(dir, 'TestCases', 'ModB'), { recursive: true });
+      fs.copyFileSync(path.join(dir, 'Lights', 'LowBeam.pkg'), path.join(dir, 'TestCases', 'ModA', 'UT.pkg'));
+      fs.copyFileSync(path.join(dir, 'Lights', 'HighBeam.pkg'), path.join(dir, 'TestCases', 'ModB', 'UT.pkg'));
+      const prj = path.join(dir, 'BodyControl.prj');
+      const locator = new PackageLocator({ root: dir });
+      const find = (raw: string) => {
+        const file = resolvePackage(raw, prj, { root: dir }, locator);
+        return file ? path.relative(dir, file).replace(/\\/g, '/') : 'NOT FOUND';
+      };
+      expect(find('ModB\\UT.pkg')).toBe('TestCases/ModB/UT.pkg');
+      expect(find('moda\\ut.PKG')).toBe('TestCases/ModA/UT.pkg');
+      expect(find('D:\\Other\\Workspace\\Stuff\\ModA\\UT.pkg')).toBe('TestCases/ModA/UT.pkg');
+      expect(find('..\\..\\Elsewhere\\ModB\\UT.pkg')).toBe('TestCases/ModB/UT.pkg');
+      expect(find('Nowhere\\Missing.pkg')).toBe('NOT FOUND');
+    });
   });
 
   it('finds the ECU-TEST Packages folder even when only a sub folder of the workspace is opened', async () => {

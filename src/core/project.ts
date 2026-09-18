@@ -83,11 +83,61 @@ export function searchDirs(prjFile: string, opts: DiscoveryOptions): string[] {
   return [...new Set(dirs)];
 }
 
+/** All .pkg files below the root and below the enclosing ECU-TEST "Packages" folder, listed once per load. */
+export class PackageLocator {
+  private files?: string[];
+  constructor(private readonly opts: DiscoveryOptions) {}
+
+  private list(prjFile: string): string[] {
+    if (this.files) return this.files;
+    const ignores = (this.opts.ignoreGlobs ?? DEFAULT_IGNORES).map(globToRegExp);
+    const found = new Set<string>();
+    const visit = (top: string, dir: string) => {
+      let entries: fs.Dirent[];
+      try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+      } catch {
+        return;
+      }
+      for (const e of entries) {
+        const full = path.join(dir, e.name);
+        const rel = toPosix(path.relative(top, full));
+        if (e.isDirectory()) {
+          if (!ignores.some((r) => r.test(rel + '/'))) visit(top, full);
+        } else if (/\.pkg$/i.test(e.name)) found.add(full);
+      }
+    };
+    const tops = [this.opts.root, ...(this.opts.packageBaseDirs ?? []).map((b) => path.resolve(this.opts.root, b))];
+    for (let d = path.dirname(prjFile); path.dirname(d) !== d; d = path.dirname(d)) if (path.basename(d).toLowerCase() === 'packages') tops.push(d);
+    for (const top of new Set(tops)) visit(top, top);
+    return (this.files = [...found]);
+  }
+
+  /**
+   * Fallback when the reference does not exist as written: the file whose path ends with the most trailing
+   * segments of the reference (case-insensitive, at least the file name); ties go to the file closest to the project.
+   */
+  find(segments: string[], prjFile: string): string | undefined {
+    const want = segments.filter((s) => s !== '..').map((s) => s.toLowerCase()).reverse();
+    let best: { file: string; score: number; distance: number } | undefined;
+    for (const file of this.list(prjFile)) {
+      const have = toPosix(file).toLowerCase().split('/').reverse();
+      let score = 0;
+      while (score < want.length && have[score] === want[score]) score++;
+      if (!score) continue;
+      const distance = toPosix(path.relative(path.dirname(prjFile), file)).split('/').length;
+      if (!best || score > best.score || (score === best.score && distance < best.distance)) best = { file, score, distance };
+    }
+    return best?.file;
+  }
+}
+
 /**
  * Resolve a raw reference (may use backslashes or be an absolute path from another machine).
- * Tries the full relative path in every search dir, then progressively shorter suffixes of absolute paths.
+ * Tries the full relative path in every search dir, then progressively shorter suffixes of absolute paths,
+ * and finally looks the file up by its trailing path among all packages (`locator`).
  */
-export function resolvePackage(raw: string, prjFile: string, opts: DiscoveryOptions): string | undefined {
+export function resolvePackage(raw: string, prjFile: string, opts: DiscoveryOptions, locator?: PackageLocator): string | undefined {
   const ref = toPosix(raw.trim());
   if (!ref) return undefined;
   if (path.isAbsolute(ref) && fs.existsSync(ref)) return path.normalize(ref);
@@ -102,5 +152,5 @@ export function resolvePackage(raw: string, prjFile: string, opts: DiscoveryOpti
       if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
     }
   }
-  return undefined;
+  return locator?.find(segments, prjFile);
 }

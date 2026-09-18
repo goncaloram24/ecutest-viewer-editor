@@ -2,7 +2,7 @@
   "name": "ecutest-viewer-editor",
   "displayName": "ECU-TEST Viewer & Editor",
   "description": "Navigate and edit tracetronic ECU-TEST projects (.prj) and packages (.pkg): tree, visual editor, CLI and MCP server for LLM agents.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "local",
   "license": "MIT",
   "private": true,

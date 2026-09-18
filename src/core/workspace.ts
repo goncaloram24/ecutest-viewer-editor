@@ -3,7 +3,7 @@ import * as path from 'path';
 import { applyPlanToDisk, EditPlan, readTextFile } from './edit';
 import { child, Diagnostic, field, FileIndex, XNode } from './model';
 import { parseText } from './parser';
-import { DiscoveryOptions, findProjects, resolvePackage, toPosix } from './project';
+import { DiscoveryOptions, findProjects, PackageLocator, resolvePackage, searchDirs, toPosix } from './project';
 
 export interface ProjectModel {
   name: string;
@@ -32,6 +32,7 @@ export class Workspace {
   diagnostics: Diagnostic[] = [];
   private index = new Map<string, XNode>();
   private lower = new Map<string, XNode>();
+  private locator = new PackageLocator({ root: '' });
 
   constructor(public opts: DiscoveryOptions) {
     this.opts = { ...opts, root: path.resolve(opts.root) };
@@ -165,9 +166,11 @@ export class Workspace {
    * is returned (parsing the file again if needed); without it, any instance will do (package calls).
    */
   private loadPackage(model: ProjectModel, raw: string, from: XNode, linked?: Set<XNode>): FileIndex | undefined {
-    const resolved = resolvePackage(raw, model.file, { ...this.opts, packageBaseDirs: [...(this.opts.packageBaseDirs ?? []), path.dirname(from.file)] });
+    const opts = { ...this.opts, packageBaseDirs: [...(this.opts.packageBaseDirs ?? []), path.dirname(from.file)] };
+    const resolved = resolvePackage(raw, model.file, opts, this.locator);
     if (!resolved) {
-      this.diagnostics.push({ severity: 'error', message: `Missing package "${raw}" referenced by ${from.path || from.name}`, file: from.file, line: from.line, path: from.path });
+      const where = searchDirs(model.file, opts).map((d) => toPosix(path.relative(this.opts.root, d)) || '.').join(', ');
+      this.diagnostics.push({ severity: 'error', message: `Missing package "${raw}" referenced by ${from.path || from.name}: not found relative to [${where}] and no .pkg with that file name exists below the root`, file: from.file, line: from.line, path: from.path });
       return undefined;
     }
     const instances = model.packages.get(resolved) ?? [];
@@ -181,6 +184,8 @@ export class Workspace {
   private rebuild(): void {
     this.index.clear();
     this.diagnostics = [];
+    // Files may have been added or removed since the last load.
+    this.locator = new PackageLocator(this.opts);
     for (const model of this.projects) {
       const root = model.index.root;
       if (!root) {

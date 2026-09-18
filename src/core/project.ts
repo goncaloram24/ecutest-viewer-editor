@@ -76,8 +76,8 @@ export function searchDirs(prjFile: string, opts: DiscoveryOptions): string[] {
   // ECU-TEST resolves references against the workspace "Packages" folder. It may sit next to the project folder,
   // above it, or even above the opened root (when only a sub folder of the ECU-TEST workspace is opened).
   for (let d = path.dirname(prjFile); ; d = path.dirname(d)) {
-    if (path.basename(d).toLowerCase() === 'packages') dirs.push(d);
-    dirs.push(path.join(d, 'Packages'));
+    // The folder itself also covers references written relative to the workspace ("Packages\\X.pkg").
+    dirs.push(d, path.join(d, 'Packages'));
     if (path.dirname(d) === d) break;
   }
   return [...new Set(dirs)];
@@ -138,8 +138,10 @@ export class PackageLocator {
  * and finally looks the file up by its trailing path among all packages (`locator`).
  */
 export function resolvePackage(raw: string, prjFile: string, opts: DiscoveryOptions, locator?: PackageLocator): string | undefined {
-  const ref = toPosix(raw.trim());
-  if (!ref) return undefined;
+  const trimmed = toPosix(raw.trim());
+  if (!trimmed) return undefined;
+  // Some references omit the extension.
+  const ref = /\.pkg$/i.test(trimmed) ? trimmed : trimmed + '.pkg';
   if (path.isAbsolute(ref) && fs.existsSync(ref)) return path.normalize(ref);
   const absolute = /^([a-zA-Z]:)?\//.test(ref);
   const segments = ref.replace(/^([a-zA-Z]:)?\/+/, '').split('/').filter((s) => s && s !== '.');

@@ -103,6 +103,7 @@ suite('project discovery', () => {
     expect(resolvePackage('Lights\\LowBeam.pkg', prj, { root: EXAMPLE })).toBe(expected);
     expect(resolvePackage('C:\\Work\\WS\\Packages\\Lights\\LowBeam.pkg', prj, { root: EXAMPLE })).toBe(expected);
     expect(resolvePackage('LowBeam.pkg', prj, { root: EXAMPLE })).toBeUndefined();
+    expect(resolvePackage('Lights\\LowBeam', prj, { root: EXAMPLE })).toBe(expected);
     expect(resolvePackage('LowBeam.pkg', prj, { root: EXAMPLE, packageBaseDirs: ['Lights'] })).toBe(expected);
   });
 

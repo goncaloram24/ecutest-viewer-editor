@@ -43,7 +43,17 @@ export class TestsTreeProvider implements vscode.TreeDataProvider<XNode>, vscode
   }
 
   getTreeItem(node: XNode): vscode.TreeItem {
-    const item = new vscode.TreeItem(node.name, node.navChildren.length ? (node.kind === 'project' || node.kind === 'folder' ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed) : vscode.TreeItemCollapsibleState.None);
+    try {
+      return this.treeItem(node);
+    } catch (e) {
+      // One odd element must never break navigation: show it plainly and log why.
+      this.model.output.appendLine(`tree: cannot render ${node.path}: ${(e as Error).stack ?? e}`);
+      return new vscode.TreeItem(node.name || node.tag, node.navChildren.length ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+    }
+  }
+
+  private treeItem(node: XNode): vscode.TreeItem {
+    const item = new vscode.TreeItem(node.name || node.tag, node.navChildren.length ? (node.kind === 'project' || node.kind === 'folder' ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed) : vscode.TreeItemCollapsibleState.None);
     const missing = node.kind === 'packageRef' && !node.pkg;
     item.id = node.path;
     item.resourceUri = nodeUri(node);

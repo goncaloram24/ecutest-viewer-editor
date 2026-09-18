@@ -63,11 +63,35 @@
     return rows.length ? h('section', {}, h('h3', {}, 'Values'), h('table', {}, rows)) : null;
   }
 
+  // Collapsed rows survive re-renders and reloads of the webview.
+  const collapsed = new Set((vscode.getState() ?? {}).collapsed ?? []);
+  const toggle = (path) => {
+    if (!collapsed.delete(path)) collapsed.add(path);
+    vscode.setState({ collapsed: [...collapsed] });
+    render(state);
+  };
+
+  function childRows(items, depth, rows) {
+    for (const c of items) {
+      // Structure (folders, packages, blocks, loops) starts open; rows that only hold generic XML detail start closed.
+      const startsOpen = depth <= 3 && c.children.some((k) => k.kind !== 'element');
+      const key = (startsOpen ? '-' : '+') + c.path;
+      const open = c.children.length > 0 && collapsed.has(key) !== startsOpen;
+      const twistie = c.childCount ? h('a', { href: '#', class: 'twistie', title: open ? 'Collapse' : 'Expand', on: { click: (e) => { e.preventDefault(); toggle(key); } } }, open ? '▾' : '▸') : h('span', { class: 'twistie' });
+      const value = c.missing ? 'missing file' : c.editable ? editor(c.value ?? '', c.allowed, (value) => send('set', { target: c.path, value }), (c.value ?? '').includes('\n')) : c.value ?? '';
+      rows.push(h('tr', { class: `${c.missing ? 'missing ' : ''}kind-${c.kind}` },
+        h('td', { style: `padding-left:${8 + depth * 18}px` }, twistie, h('a', { href: '#', title: c.path, on: { click: (e) => { e.preventDefault(); go(c.path); } } }, c.name)),
+        h('td', { class: 'type' }, c.type), h('td', { class: 'value' }, value),
+        h('td', { class: 'actions' }, button('▲', 'Move up', () => send('moveUp', { path: c.path }), c.canUp), button('▼', 'Move down', () => send('moveDown', { path: c.path }), c.canDown), button('✕', 'Delete', () => send('delete', { path: c.path }), c.removable))));
+      if (open) childRows(c.children, depth + 1, rows);
+    }
+    return rows;
+  }
+
   function children(s) {
-    const rows = s.children.map((c) => h('tr', { class: c.missing ? 'missing' : '' },
-      h('td', {}, h('a', { href: '#', on: { click: (e) => { e.preventDefault(); go(c.path); } } }, c.name)), h('td', { class: 'type' }, c.type), h('td', { class: 'value' }, c.missing ? 'missing file' : c.value ?? ''),
-      h('td', { class: 'actions' }, button('▲', 'Move up', () => send('moveUp', { path: c.path }), c.canUp), button('▼', 'Move down', () => send('moveDown', { path: c.path }), c.canDown), button('✕', 'Delete', () => send('delete', { path: c.path }), c.removable))));
-    return h('section', {}, h('h3', {}, `Children (${s.children.length})`), rows.length ? h('table', { class: 'children' }, rows) : h('p', { class: 'hint' }, 'No children.'), adders(s));
+    if (s.missing) return h('section', {}, h('h3', {}, 'Content'), h('p', { class: 'problem' }, `The package file "${s.missing}" was not found, so its variables and steps cannot be shown. Set ecutest.packageBaseDirs to the folder the reference is relative to (usually the ECU-TEST "Packages" folder), or fix @PACKAGE-PATH.`));
+    const rows = childRows(s.children, 0, []);
+    return h('section', {}, h('h3', {}, `Content (${s.children.length})`), rows.length ? h('table', { class: 'children' }, rows) : h('p', { class: 'hint' }, 'No children.'), adders(s));
   }
 
   function adders(s) {

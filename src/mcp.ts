@@ -21,7 +21,7 @@ const INSTRUCTIONS = [
 async function main(): Promise<void> {
   const opts = { root: option('root') ?? process.cwd(), project: option('project') };
   const ctx = { generatedDir: option('generated-dir') };
-  const server = new McpServer({ name: 'ecutest', version: '0.1.0' }, { instructions: INSTRUCTIONS });
+  const server = new McpServer({ name: 'ecutest', version: '0.1.1' }, { instructions: INSTRUCTIONS });
   for (const command of COMMANDS) {
     const shape: Record<string, z.ZodTypeAny> = {};
     for (const p of command.params) {

@@ -98,7 +98,8 @@ command **ECU-TEST: Set Up MCP Server for Agents** writes one for your workspace
   mappings, steps) and **Description** (explanation of the selected element with clickable references).
 - Badges: `!` missing package / problem, `G` generated `test.h` differs (when `ecutest.showGenerated` is on),
   `·` on ancestors.
-- **Visual editor** (click an element): editable value, fields and attributes; children with add / delete /
+- **Visual editor** (click an element): editable value, fields and attributes; the complete content below the
+  element as a collapsible outline (variables, mappings, nested steps) with inline value editing, add / delete /
   move; navigation bar with back/forward, parent, first child, siblings
   (Alt+←/→, Alt+↑, Alt+↓, Alt+Shift+↑/↓), *Open source* (jumps to file:line) and *Reveal in tree*.
 - Edits are applied as one undo-able `WorkspaceEdit` and saved. A file with unsaved manual changes is never edited.
@@ -124,8 +125,10 @@ Everything else is reachable from all three surfaces.
 
 Root = `--root` or the workspace folder. Projects are found with the glob. Every `packageTest` component
 references a package (`PACKAGE-REF/PACKAGE-PATH`, Windows separators); references are resolved against, in order:
-the project's folder, the root, `packageBaseDirs`, and every `Packages` folder between the project folder and the
-root (ECU-TEST's workspace convention). Absolute paths from another machine are matched by their longest existing
+the project's folder, the root, `packageBaseDirs`, and every `Packages` folder at or above the project folder,
+even above the opened root (ECU-TEST's workspace convention; this makes opening a sub folder of the workspace work).
+A package referenced several times by one project is indexed once per reference (`/P/Mod/UT`, `/P/Mod/UT#2`), so
+every reference shows the full contents; edits go to the one shared file. Absolute paths from another machine are matched by their longest existing
 suffix. Packages called by `tsPackage` steps with a literal path are loaded as well. Missing packages become
 diagnostics (`info`, tree badge), never errors. There is no variants-file mechanism.
 

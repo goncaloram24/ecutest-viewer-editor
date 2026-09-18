@@ -9,10 +9,13 @@ export interface ProjectModel {
   name: string;
   file: string;
   index: FileIndex;
-  /** Package files loaded for this project, by absolute file name. */
-  packages: Map<string, FileIndex>;
+  /**
+   * Package files loaded for this project, by absolute file name. A package referenced several times is indexed
+   * once per reference, so every reference shows (and addresses) its own copy of the contents.
+   */
+  packages: Map<string, FileIndex[]>;
   /** Packages that are only reached through package-call steps, shown below the project. */
-  called: XNode[];
+  called: { root: XNode; raw: string }[];
 }
 
 export function escapeSegment(name: string): string {
@@ -57,7 +60,7 @@ export class Workspace {
       }
       if (p.packages.has(abs)) {
         if (result === 'none') result = 'package';
-        p.packages.set(abs, this.parseFile(abs));
+        p.packages.set(abs, [this.parseFile(abs)]);
       }
       return p;
     });
@@ -85,8 +88,9 @@ export class Workspace {
 
   fileIndex(node: XNode): FileIndex {
     for (const p of this.projects) {
-      const idx = p.file === node.file ? p.index : p.packages.get(node.file);
-      if (idx?.root && rootOf(node) === idx.root) return idx;
+      const top = rootOf(node);
+      const idx = p.file === node.file && p.index.root === top ? p.index : p.packages.get(node.file)?.find((i) => i.root === top);
+      if (idx) return idx;
     }
     throw new Error(`File of ${node.path} is not loaded`);
   }
@@ -156,15 +160,21 @@ export class Workspace {
     }
   }
 
-  /** Load (once per project) the package a reference points at. */
-  private loadPackage(model: ProjectModel, raw: string, from: XNode): FileIndex | undefined {
+  /**
+   * The index of the package a reference points at. With `linked`, an instance whose contents are not shown yet
+   * is returned (parsing the file again if needed); without it, any instance will do (package calls).
+   */
+  private loadPackage(model: ProjectModel, raw: string, from: XNode, linked?: Set<XNode>): FileIndex | undefined {
     const resolved = resolvePackage(raw, model.file, { ...this.opts, packageBaseDirs: [...(this.opts.packageBaseDirs ?? []), path.dirname(from.file)] });
     if (!resolved) {
       this.diagnostics.push({ severity: 'error', message: `Missing package "${raw}" referenced by ${from.path || from.name}`, file: from.file, line: from.line, path: from.path });
       return undefined;
     }
-    if (!model.packages.has(resolved)) model.packages.set(resolved, this.parseFile(resolved));
-    return model.packages.get(resolved);
+    const instances = model.packages.get(resolved) ?? [];
+    model.packages.set(resolved, instances);
+    let idx = linked ? instances.find((i) => !i.root || !linked.has(i.root)) : instances[0];
+    if (!idx) instances.push((idx = this.parseFile(resolved)));
+    return idx;
   }
 
   /** Rebuild navigation links, paths, the path index and diagnostics from the parsed files. */
@@ -186,16 +196,21 @@ export class Workspace {
       this.link(model, root, root, linked);
       // Packages reached only through call steps are listed below the project so they are addressable too.
       for (let i = 0; i < model.called.length; i++) {
-        const pkgRoot = model.called[i];
+        const { root: pkgRoot, raw } = model.called[i];
         if (linked.has(pkgRoot)) continue;
         pkgRoot.navParent = root;
         pkgRoot.name = path.basename(pkgRoot.file).replace(/\.pkg$/i, '');
         root.navChildren.push(pkgRoot);
-        this.assign(pkgRoot, root.path + '/' + packageSegment(toPosix(path.relative(path.dirname(model.file), pkgRoot.file))));
+        this.assign(pkgRoot, root.path + '/' + packageSegment(raw));
         this.link(model, pkgRoot, root, linked);
       }
-      for (const [file, idx] of [...model.packages]) if (idx.root && !linked.has(idx.root)) model.packages.delete(file);
-      for (const idx of [model.index, ...model.packages.values()]) this.diagnostics.push(...idx.diagnostics);
+      // Drop instances that are no longer referenced; report each file's own problems once.
+      for (const [file, instances] of [...model.packages]) {
+        const used = instances.filter((i, n) => (i.root ? linked.has(i.root) : n === 0));
+        if (used.length) model.packages.set(file, used);
+        else model.packages.delete(file);
+      }
+      for (const idx of [model.index, ...[...model.packages.values()].map((i) => i[0])]) this.diagnostics.push(...idx.diagnostics);
     }
     this.lower = new Map([...this.index].reverse().map(([k, n]) => [k.toLowerCase(), n]));
   }
@@ -224,13 +239,11 @@ export class Workspace {
     };
     contents(node);
     if (node.kind === 'packageRef' && node.ref) {
-      const idx = this.loadPackage(model, node.ref.raw, node);
+      const idx = this.loadPackage(model, node.ref.raw, node, linked);
       node.ref.resolved = idx?.file;
       node.pkg = idx?.root?.kind === 'package' ? idx.root : undefined;
-      // A package referenced twice shows its contents below the first reference only (one path per element).
-      if (node.pkg && !linked.has(node.pkg)) {
+      if (node.pkg) {
         linked.add(node.pkg);
-        node.pkg.path = '';
         contents(node.pkg);
       } else if (idx?.root && idx.root.kind !== 'package') {
         this.diagnostics.push({ severity: 'error', message: `"${node.ref.raw}" is not an ECU-TEST package (root <${idx.root.tag}>)`, file: node.file, line: node.line, path: node.path });
@@ -252,7 +265,8 @@ export class Workspace {
     const literal = ref?.type === 'valueBaseExpression' ? field(ref, 'VALUE')?.value : undefined;
     if (!literal) return;
     const idx = this.loadPackage(model, literal, step);
-    if (idx?.root && idx.root.kind === 'package' && !linked.has(idx.root) && !model.called.includes(idx.root)) model.called.push(idx.root);
+    const root = idx?.root;
+    if (root && root.kind === 'package' && !linked.has(root) && !model.called.some((c) => c.root === root)) model.called.push({ root, raw: literal });
   }
 
   /** Packages (navigation nodes) of a project: referenced test cases and call-only packages. */

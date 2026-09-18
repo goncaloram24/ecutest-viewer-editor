@@ -73,10 +73,12 @@ export function findProjects(opts: DiscoveryOptions): string[] {
 export function searchDirs(prjFile: string, opts: DiscoveryOptions): string[] {
   const dirs = [path.dirname(prjFile), opts.root];
   for (const b of opts.packageBaseDirs ?? []) dirs.push(path.resolve(opts.root, b));
-  // ECU-TEST workspaces keep packages in a "Packages" folder next to (or above) the project folder.
+  // ECU-TEST resolves references against the workspace "Packages" folder. It may sit next to the project folder,
+  // above it, or even above the opened root (when only a sub folder of the ECU-TEST workspace is opened).
   for (let d = path.dirname(prjFile); ; d = path.dirname(d)) {
+    if (path.basename(d).toLowerCase() === 'packages') dirs.push(d);
     dirs.push(path.join(d, 'Packages'));
-    if (path.relative(opts.root, d) === '' || path.dirname(d) === d || path.relative(opts.root, d).startsWith('..')) break;
+    if (path.dirname(d) === d) break;
   }
   return [...new Set(dirs)];
 }

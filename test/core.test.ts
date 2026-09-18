@@ -106,6 +106,20 @@ suite('project discovery', () => {
     expect(resolvePackage('LowBeam.pkg', prj, { root: EXAMPLE, packageBaseDirs: ['Lights'] })).toBe(expected);
   });
 
+  it('finds the ECU-TEST Packages folder even when only a sub folder of the workspace is opened', async () => {
+    await withCopy(EXAMPLE, (dir) => {
+      const packages = path.join(dir, 'Packages');
+      fs.mkdirSync(path.join(packages, 'Projects'), { recursive: true });
+      fs.renameSync(path.join(dir, 'Lights'), path.join(packages, 'Lights'));
+      fs.renameSync(path.join(dir, 'Lib'), path.join(packages, 'Lib'));
+      fs.renameSync(path.join(dir, 'BodyControl.prj'), path.join(packages, 'Projects', 'BodyControl.prj'));
+      const ws = load(path.join(packages, 'Projects'));
+      expect(ws.resolve('/BodyControl/Lights/LowBeam/settleTime').value).toBe('0.5');
+      expect(ws.resolve('/BodyControl/Lights/LowBeam/Ignition on/tsPackage').value).toBe('Lib\\PowerOn.pkg');
+      expect(ws.resolve('/BodyControl/Lib/PowerOn').kind).toBe('package');
+    });
+  });
+
   it('reports the missing package as a diagnostic and keeps loading', () => {
     const ws = load(EXAMPLE);
     expect(ws.diagnostics).toHaveLength(1);

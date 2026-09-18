@@ -82,7 +82,7 @@ export class ModelService implements vscode.Disposable {
     const ws = this.ws!;
     const rel = (f: string) => path.relative(ws.opts.root, f);
     this.output.appendLine(`[${new Date().toLocaleTimeString()}] ${what}: ${ws.projects.length} project(s), ${new Set(ws.files()).size} file(s)`);
-    for (const p of ws.projects) this.output.appendLine(`  ${rel(p.file)}: ${[...p.packages.keys()].map(rel).join(', ') || '(no packages)'}`);
+    for (const p of ws.projects) this.output.appendLine(`  ${rel(p.file)} → ${p.index.root?.path ?? '(unreadable)'}: ${p.index.root?.navChildren.length ?? 0} top-level element(s); packages: ${[...p.packages.keys()].map(rel).join(', ') || '(none resolved)'}`);
     this.output.appendLine(`  counts: ${Object.entries(ws.counts()).map(([k, v]) => `${k}=${v}`).join(' ')}`);
     for (const d of ws.diagnostics) this.output.appendLine(`  ${d.severity}: ${rel(d.file)}:${d.line}: ${d.message}`);
     this.refreshMarks();

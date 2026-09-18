@@ -34,3 +34,9 @@ td.type { width: 28%; opacity: 0.6; font-size: 0.9em; padding-top: 5px; }
 .adder button { flex: 0 0 auto; color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 .hint { opacity: 0.6; margin: 4px 0 0; }
 code { font-family: var(--vscode-editor-font-family); }
+.twistie { display: inline-block; width: 16px; text-decoration: none !important; opacity: 0.8; }
+.children td.value input, .children td.value select, .children td.value textarea { background: transparent; border-color: transparent; font-family: var(--vscode-editor-font-family); padding: 1px 4px; }
+.children tr:hover td.value input, .children tr:hover td.value select, .children td.value input:focus, .children td.value textarea:focus { border-color: var(--vscode-input-border, var(--vscode-panel-border)); background: var(--vscode-input-background); }
+.kind-element a, .kind-element .value { opacity: 0.75; }
+.kind-parameter td:first-child a::before { content: '𝑥 '; opacity: 0.6; }
+.kind-mapping td:first-child a::before { content: '⇄ '; opacity: 0.6; }

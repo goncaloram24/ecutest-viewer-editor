@@ -34,6 +34,15 @@ export function activate(context: vscode.ExtensionContext): void {
   const target = async (arg: unknown, filter: (n: XNode) => boolean = () => true, placeHolder = 'Select an element'): Promise<XNode | undefined> => {
     const ws = workspace();
     if (typeof arg === 'string') return ws.resolve(arg);
+    // Invoked on a .prj/.pkg file (explorer or editor title): the project, or the first test case using the package.
+    if (arg && typeof arg === 'object' && 'fsPath' in arg) {
+      const uri = arg as vscode.Uri;
+      const file = path.normalize(uri.fsPath).toLowerCase();
+      const same = (f: string | undefined) => !!f && path.normalize(f).toLowerCase() === file;
+      const node = ws.all().find((n) => (n.kind === 'project' && same(n.file)) || (n.kind === 'packageRef' && same(n.pkg?.file)) || (n.kind === 'package' && same(n.file)));
+      if (!node) throw new Error(`${path.basename(uri.fsPath)} is not loaded: no project under ${ws.opts.root} references it (see "ECU-TEST: Show Output" for what was loaded)`);
+      return node;
+    }
     if (arg && typeof arg === 'object' && 'navChildren' in arg) return ws.get((arg as XNode).path) ?? (arg as XNode);
     const current = (editor.currentPath && ws.get(editor.currentPath)) || treeView.selection[0];
     if (current && filter(current)) return current;

@@ -107,8 +107,12 @@ suite('ops', () => {
       expect(ws.resolve('/BodyControl/Wipers').navChildren.map((c) => c.name)).toEqual(['Wiper speed', 'Rain sensor', 'Washer pump']);
       applyChecked(ws, addStep(ws, '/BodyControl/Wipers/Washer', 'TsWait', { value: '1' }));
       expect(ws.resolve('/BodyControl/Wipers/Washer/TsWait').value).toBe('1');
-      expect(() => addPackage(ws, '/BodyControl', 'Wipers/Washer.pkg')).toThrow(/already referenced/);
-      expect(() => addPackage(ws, '/BodyControl', '../evil.pkg')).toThrow(/relative to the project folder/);
+      expect(() => addPackage(ws, '/BodyControl', '/abs/evil.pkg')).toThrow(/relative to the project folder/);
+      // The same package may be a test case several times; every reference shows its own copy of the contents.
+      applyChecked(ws, addPackage(ws, '/BodyControl', 'Wipers/Washer.pkg', 'Washer again'));
+      expect(ws.resolve('/BodyControl/Wipers/Washer#2/TsWait').value).toBe('1');
+      applyChecked(ws, setValue(ws, '/BodyControl/Wipers/Washer#2/TsWait', '4'));
+      expect(ws.resolve('/BodyControl/Wipers/Washer/TsWait').value).toBe('4');
       expect(() => addPackage(ws, LOW, 'X.pkg')).toThrow(/project or a folder/);
       // Referencing the existing, previously missing package file fixes the diagnostic.
       applyChecked(ws, newProject(ws, 'Smoke.prj'));

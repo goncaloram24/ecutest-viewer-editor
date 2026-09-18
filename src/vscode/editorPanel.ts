@@ -6,7 +6,7 @@ import { EditPlan } from '../core/edit';
 import { nodeView } from '../core/json';
 import { XNode } from '../core/model';
 import { addPackage, addParam, addStep, deleteNode, moveNode, rename, setValue } from '../core/ops';
-import { nameRefs, schemaFor } from '../core/schema';
+import { allowedValues, nameRefs, schemaFor } from '../core/schema';
 import { Workspace } from '../core/workspace';
 import { ModelService } from './modelService';
 import { contextOf } from './treeProvider';
@@ -78,7 +78,25 @@ export class EditorPanel {
     this.panel.title = node.name;
     const siblings = node.navParent?.navChildren ?? ws.roots();
     const i = siblings.indexOf(node);
+    // The whole content below the element (variables, mappings, nested steps), capped for very large packages.
+    let budget = 3000;
     const sameKind = (a: XNode | undefined, b: XNode) => !!a && a.kind === b.kind && a.tag === b.tag;
+    const outline = (parent: XNode): unknown[] =>
+      parent.navChildren.map((c, n, all) => ({
+        path: c.path,
+        name: c.name,
+        type: c.label ?? c.kind,
+        kind: c.kind,
+        value: c.value,
+        editable: !!c.valueRef || c.kind === 'parameter',
+        allowed: c.valueRef && allowedValues(c.valueRef),
+        removable: contextOf(c).includes('removable'),
+        canUp: sameKind(all[n - 1], c),
+        canDown: sameKind(all[n + 1], c),
+        missing: c.kind === 'packageRef' && !c.pkg,
+        childCount: c.navChildren.length,
+        children: --budget > 0 ? outline(c) : [],
+      }));
     void this.panel.webview.postMessage({
       type: 'render',
       view: nodeView(ws, node, 0),
@@ -87,7 +105,8 @@ export class EditorPanel {
       renamable: nameRefs(node).length > 0,
       context: contextOf(node),
       generated: this.model.diff.get(node.path),
-      children: node.navChildren.map((c, n, all) => ({ path: c.path, name: c.name, type: c.label ?? c.kind, value: c.value, kind: c.kind, removable: contextOf(c).includes('removable'), canUp: sameKind(all[n - 1], c), canDown: sameKind(all[n + 1], c), missing: c.kind === 'packageRef' && !c.pkg })),
+      missing: node.kind === 'packageRef' && !node.pkg ? node.ref?.raw : undefined,
+      children: outline(node),
       nav: { canBack: this.cursor > 0, canForward: this.cursor < this.history.length - 1, parent: node.navParent?.path, prev: siblings[i - 1]?.path, next: siblings[i + 1]?.path, firstChild: node.navChildren[0]?.path },
     });
     this.onShow(node);

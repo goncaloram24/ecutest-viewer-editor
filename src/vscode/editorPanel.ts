@@ -105,7 +105,8 @@ export class EditorPanel {
       renamable: nameRefs(node).length > 0,
       context: contextOf(node),
       generated: this.model.diff.get(node.path),
-      missing: node.kind === 'packageRef' && !node.pkg ? node.ref?.raw : undefined,
+      // Why the content of a package test case cannot be shown: not found, or found but unreadable.
+      missing: node.kind === 'packageRef' && !node.pkg ? ws.diagnostics.filter((d) => d.path === node!.path).map((d) => d.message).join(' ') || `Package "${node.ref?.raw}" could not be loaded.` : undefined,
       children: outline(node),
       nav: { canBack: this.cursor > 0, canForward: this.cursor < this.history.length - 1, parent: node.navParent?.path, prev: siblings[i - 1]?.path, next: siblings[i + 1]?.path, firstChild: node.navChildren[0]?.path },
     });

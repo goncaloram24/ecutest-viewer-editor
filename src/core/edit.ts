@@ -48,11 +48,21 @@ export function groupByFile(edits: TextEdit[]): Map<string, TextEdit[]> {
   return map;
 }
 
-/** Read a file as text, separating a leading BOM so offsets match editor coordinates. */
-export function readTextFile(file: string): { text: string; bom: boolean } {
-  const raw = fs.readFileSync(file, 'utf8');
+export type TextEncoding = 'utf8' | 'utf16le';
+
+/**
+ * Read a file as text, separating a leading BOM so offsets match editor coordinates. UTF-16 (little endian, with
+ * BOM) is decoded; compressed or binary content throws with a message that says what the file really is.
+ */
+export function readTextFile(file: string): { text: string; bom: boolean; encoding: TextEncoding } {
+  const bytes = fs.readFileSync(file);
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b) throw new Error('the file is gzip-compressed, not plain XML; save it uncompressed in ECU-TEST');
+  if (bytes[0] === 0x50 && bytes[1] === 0x4b) throw new Error('the file is a zip archive, not plain XML; save it uncompressed in ECU-TEST');
+  const encoding: TextEncoding = bytes[0] === 0xff && bytes[1] === 0xfe ? 'utf16le' : 'utf8';
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) throw new Error('UTF-16 big endian files are not supported; save the file as UTF-8');
+  const raw = bytes.toString(encoding);
   const bom = raw.charCodeAt(0) === 0xfeff;
-  return { text: bom ? raw.slice(1) : raw, bom };
+  return { text: bom ? raw.slice(1) : raw, bom, encoding };
 }
 
 /** Apply a plan on disk (CLI/MCP). Returns the files touched. */
@@ -64,8 +74,8 @@ export function applyPlanToDisk(plan: EditPlan): string[] {
     touched.push(c.file);
   }
   for (const [file, edits] of groupByFile(plan.edits)) {
-    const { text, bom } = readTextFile(file);
-    fs.writeFileSync(file, (bom ? BOM : '') + applyEdits(text, edits), 'utf8');
+    const { text, bom, encoding } = readTextFile(file);
+    fs.writeFileSync(file, (bom ? BOM : '') + applyEdits(text, edits), encoding);
     if (!touched.includes(file)) touched.push(file);
   }
   return touched;

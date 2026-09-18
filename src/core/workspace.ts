@@ -138,7 +138,7 @@ export class Workspace {
       const { text, bom } = readTextFile(file);
       return parseText(file, text, bom);
     } catch (e) {
-      return { file, text: '', bom: false, eol: '\n', diagnostics: [{ severity: 'error', message: `Cannot read file: ${(e as Error).message}`, file, line: 1 }] };
+      return { file, text: '', bom: false, eol: '\n', diagnostics: [{ severity: 'error', message: `Cannot read ${path.basename(file)}: ${(e as Error).message}`, file, line: 1 }] };
     }
   }
 
@@ -250,8 +250,10 @@ export class Workspace {
       if (node.pkg) {
         linked.add(node.pkg);
         contents(node.pkg);
-      } else if (idx?.root && idx.root.kind !== 'package') {
-        this.diagnostics.push({ severity: 'error', message: `"${node.ref.raw}" is not an ECU-TEST package (root <${idx.root.tag}>)`, file: node.file, line: node.line, path: node.path });
+      } else if (idx) {
+        // Found on disk but not usable: say so at the reference, where the user is looking.
+        const why = idx.root ? `its root element is <${idx.root.tag}>, expected <PACKAGE>` : idx.diagnostics[0]?.message ?? 'it contains no XML';
+        this.diagnostics.push({ severity: 'error', message: `Package "${node.ref.raw}" was found at ${toPosix(path.relative(this.opts.root, idx.file))} but cannot be shown: ${why}`, file: node.file, line: node.line, path: node.path });
       }
     }
     node.navChildren = kids;

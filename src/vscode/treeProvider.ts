@@ -57,7 +57,7 @@ export class TestsTreeProvider implements vscode.TreeDataProvider<XNode>, vscode
     const missing = node.kind === 'packageRef' && !node.pkg;
     item.id = node.path;
     item.resourceUri = nodeUri(node);
-    item.description = missing ? `missing: ${node.ref?.raw}` : node.value !== undefined && node.value !== '' ? `= ${node.value.replace(/\s+/g, ' ')}` : node.kind === 'step' && node.name !== node.label ? node.label : undefined;
+    item.description = missing ? `${node.ref?.resolved ? 'unreadable' : 'missing'}: ${node.ref?.raw}` : node.value !== undefined && node.value !== '' ? `= ${node.value.replace(/\s+/g, ' ')}` : node.kind === 'step' && node.name !== node.label ? node.label : undefined;
     item.tooltip = new vscode.MarkdownString(`\`${node.path}\`\n\n${node.label ?? node.kind} — ${vscode.workspace.asRelativePath(node.file)}:${node.line}`);
     item.iconPath = new vscode.ThemeIcon(missing ? 'warning' : (node.kind === 'step' && STEP_ICONS[node.label ?? '']) || ICONS[node.kind] || 'symbol-field');
     item.contextValue = contextOf(node);

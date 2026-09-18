@@ -89,7 +89,7 @@
   }
 
   function children(s) {
-    if (s.missing) return h('section', {}, h('h3', {}, 'Content'), h('p', { class: 'problem' }, `The package file "${s.missing}" was not found, so its variables and steps cannot be shown. Set ecutest.packageBaseDirs to the folder the reference is relative to (usually the ECU-TEST "Packages" folder), or fix @PACKAGE-PATH.`));
+    if (s.missing) return h('section', {}, h('h3', {}, 'Content'), h('p', { class: 'problem' }, s.missing), h('p', { class: 'hint' }, 'If the file exists elsewhere, set ecutest.packageBaseDirs to the folder the reference is relative to. "ECU-TEST: Show Output" lists everything that was loaded.'));
     const rows = childRows(s.children, 0, []);
     return h('section', {}, h('h3', {}, `Content (${s.children.length})`), rows.length ? h('table', { class: 'children' }, rows) : h('p', { class: 'hint' }, 'No children.'), adders(s));
   }

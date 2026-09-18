@@ -48,6 +48,23 @@ suite('ops', () => {
       expect(() => setValue(ws, `${LOW}/@NOPE`, 'x')).toThrow(/no field or attribute/);
     }));
 
+  it('reads and writes UTF-16 packages, and explains files that are found but unreadable', () =>
+    withCopy(EXAMPLE, (dir) => {
+      const dtc = path.join(dir, 'Diagnostics/ReadDtc.pkg');
+      fs.writeFileSync(dtc, '\ufeff' + fs.readFileSync(dtc, 'utf8'), 'utf16le');
+      fs.writeFileSync(path.join(dir, 'Lights/FogLight.pkg'), require('zlib').gzipSync('<PACKAGE/>'));
+      fs.writeFileSync(path.join(dir, 'Lights/HighBeam.pkg'), '<SOMETHING-ELSE/>');
+      const ws = load(dir);
+      ws.apply(setValue(ws, '/BodyControl/Diagnostics/ReadDtc/dtcCount', '7'));
+      expect(ws.resolve('/BodyControl/Diagnostics/ReadDtc/dtcCount').value).toBe('7');
+      const bytes = fs.readFileSync(dtc);
+      expect([bytes[0], bytes[1]]).toEqual([0xff, 0xfe]);
+      expect(bytes.toString('utf16le')).toContain('<DATA xsi:type="integer">7</DATA>');
+      const messages = ws.diagnostics.map((d) => d.message).join('\n');
+      expect(messages).toMatch(/"Lights\\FogLight.pkg" was found at Lights\/FogLight.pkg but cannot be shown: Cannot read FogLight.pkg: the file is gzip-compressed/);
+      expect(messages).toMatch(/"Lights\\HighBeam.pkg" was found .* root element is <SOMETHING-ELSE>, expected <PACKAGE>/);
+    }));
+
   it('add-step: every addable type, positions, indentation, empty containers', () =>
     withCopy(EXAMPLE, (dir) => {
       const ws = load(dir);
